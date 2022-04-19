@@ -8,11 +8,11 @@ DDJ is pleased So present this version of Tiny BASIC for
 the 6809. It is a direct descendant of Li-Chen Wang’s Palo Alto
 Tiny BASIC (refer to DDJ #5) which its author, James A.
 Hinds, has named Santa Barbara Tiny BASIC.
-SBTB is an example of a transliteration of a large 8080 pro­gram,
+SBTB is an example of a transliteration of a large 8080 program,
 and contains a number of 6809 techniques which should
 be useful to those who want to get familiar with the 6809. The
 program was developed on an Apple II with The Mill (which
-puts the 6809 under the hood) and Technical Systems Consul­tants'
+puts the 6809 under the hood) and Technical Systems Consultants'
 operating system, FLEX.
 
 The following introductory paragraphs are the same as
@@ -61,7 +61,7 @@ operators result in a 1 if true and a 0 if not true.
 
 ## Expressions
 
-Expressions are formed with numbers, varia­bles, and functions with arithmetic and compare operators be­tween them. + and - signs can also be used at the beginning of
+Expressions are formed with numbers, varia­bles, and functions with arithmetic and compare operators between them. + and - signs can also be used at the beginning of
 an expression. The value of an expression is evaluated from left
 to right, except that * and / are always done first, and then +
 and -, and then compare operators. Parentheses can also be used
@@ -92,12 +92,12 @@ All the commands described later can be
 used as direct commands except the following three; they can
 only be used as direct commands and not as part of a statement:
 
-* `RUN` will start to execute the program starting at the lowest state­ment number.
+* `RUN` will start to execute the program starting at the lowest statement number.
 * `LIST` will print out all the statements in numerical order.
 * `LIST 120` will print out all the statements in numerical order starting at statement 120.
 `NEW` will delete all statements.
 
-Abbreviation and blanks. You may use blanks freely, ex­cept that numbers, command keywords, and function names can not have embedded blanks.
+Abbreviation and blanks. You may use blanks freely, except that numbers, command keywords, and function names can not have embedded blanks.
 
 You may truncate all command keywords and function
 names and follow them by a period. `P.`, `PR.`, `PRI.`, and
@@ -154,7 +154,7 @@ LET A=234-5*6, A=A/2, X-A-100, @(X+9)=A-1
 ```
 
 will set the variable `A` to the value of the expression `234-5*6`
-(i.e., `204`), set the variable `A` (again) to the value of the expres­sion `A/2` (i.e., `102`), set the variable `X` to the value of the expres­sion `A-100` (i.e., 2), and then set the variable `@(11)` to `101`
+(i.e., `204`), set the variable `A` (again) to the value of the expression `A/2` (i.e., `102`), set the variable `X` to the value of the expression `A-100` (i.e., 2), and then set the variable `@(11)` to `101`
 (where `11` is the value of the expression `X+9` and `101` is the
 value of the expression `A - 1`).
 
@@ -387,7 +387,7 @@ mark inserted at the point where the error is detected.
 
 3. SORRY means it understands you and knows how to do it but there is not enough memory to do it.
 
-### Error Corrections.ß
+### Error Corrections.
 
 If you notice an error in typing before
 you hit the CR, you can delete the last character by the Rub-Out 
