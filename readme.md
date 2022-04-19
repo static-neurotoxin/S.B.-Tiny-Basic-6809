@@ -2,7 +2,7 @@
 
 ## by James A. Hinds
 
-This is a version of tiny basic that appears in issue #55, May 1981 issue of Dr. Dobbs Journal of Computer Calisthenics & Orthodontia.
+This is a version of tiny basic that appears in issue #55, May 1981 issue of [Dr. Dobbs Journal of Computer Calisthenics & Orthodontia](https://www.drdobbs.com).
 
 Road Map:
 

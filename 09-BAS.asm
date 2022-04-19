@@ -127,120 +127,114 @@
 014C 31  21                     LEAY   1,Y
 014E 32  62                     LEAS   2,S
 0150 16  01 D1                  LBRA   RUNNXL
-
-                ******************
-                *  ENDCHK IS USED TO VERIFY
-                *  A COMMAND IS TERMINATED BY
-                *    A CR BEFORE PERFORMING
-                *    THE COMMAND.
+                ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+                ;  ENDCHK IS USED TO VERIFY
+                ;    A COMMAND IS TERMINATED BY
+                ;    A CR BEFORE PERFORMING
+                ;    THE COMMAND.
 0153            ENDCHK          TSTC    $D,QWHAT
 015B                            RATS
-                ******************
-                * FINE USED TO CONTINUE EXECUTION
-                *    WITH NEXT STATEMENT. IF CURRENT
-                *    STATEMENT IS NOT AT END
-                *    A ’WHAT’ ERROR IS SIGNALLED
-015C 8D DD      FINE            BSR     FIN                     IF ERROR THEN FALL THROUGH
-                ******************
+                ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+                ; FINE USED TO CONTINUE EXECUTION
+                ;    WITH NEXT STATEMENT. IF CURRENT
+                ;    STATEMENT IS NOT AT END
+                ;    A ’WHAT’ ERROR IS SIGNALLED
+015C 8D DD      FINE            BSR     FIN                     ; IF ERROR THEN FALL THROUGH
+                ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 015E 17 04 65   QWHAT           LBSR    ERROR
 0161 57 48 41 54                FCC     ’WHAT?',13
 0165 3F 0D
 0167 17 04 5C   QSORRY          LBSR    ERROR
 016A 53 4F 52 52                FCC     ’SORRY’,13
 016E 59 0D
-                ******************
-                * IGNBLK    SCANS PAST ANY
-                *  SPACES AND RETURNS FIRST
-                *  CHAR WITH PROG PTR UPDATED
-
+                ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+                ; IGNBLK    SCANS PAST ANY
+                ;  SPACES AND RETURNS FIRST
+                ;  CHAR WITH PROG PTR UPDATED
 0170 31 21      I1              LEAY    1,Y
-0172 A6 A4      IGNBLK          LDA    0, Y
-0174 81 20                      CMPA   #'                       A BLANK
-0176 27 F8                      BEQ    I1                       GET NEXT
+0172 A6 A4      IGNBLK          LDA     0,Y
+0174 81 20                      CMPA   #'                       ; A BLANK
+0176 27 F8                      BEQ    I1                       ; GET NEXT
 0178                            RATS
-
-                ******************
-                *  OUTPUT ROUTINES
-                *      SPACE        PUTS ONE BLANK
-                *      CRLF         PUTS CR
-                *      OUTC         PUTS CHAR IN MAILBOX
-                *         FOR 6502 TO GRAB AND
-                *         CLEAR MAILBOX
-0179 86 20      SPACE           LDA     #'                      A SPACE
+                ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+                ;  OUTPUT ROUTINES
+                ;      SPACE        PUTS ONE BLANK
+                ;      CRLF         PUTS CR
+                ;      OUTC         PUTS CHAR IN MAILBOX
+                ;         FOR 6502 TO GRAB AND
+                ;         CLEAR MAILBOX
+0179 86 20      SPACE           LDA     #'                      ; A SPACE
 017B 20 02                      BRA     OUTC
 017D 86 OD      CRLF            LDA     #13
-017F 1E 88      OUTC            EXG     A, A                    GIVE 6502 SOME EXTRA CYCLES
+017F 1E 88      OUTC            EXG     A, A                    ; GIVE 6502 SOME EXTRA CYCLES
 0181 7D FB FF                   TST     $FBFF
 0184 26 F9                      BNE     OUTC
 0186 B7 FB FF                   STA     $FBFF
 0189                            RATS
-
-                ******************
-                *  INPUT ROUTINE
-                *    CHKIO RETURN ZERO IF NO
-                *    CHAR, OTHERWISE GRAB IT
-                *    RESTART BASIC IF IT IS
-                *    CONTROL-C
-01BA B6 FB FE   CHKIO           LDA    $FBFE                    CHAR LOC
-018D 27 FA                      BEQ    RETURN                   IF NO CHAR JUST SAY SO
-018F 7F FB FE                   CLR    $FBFE                    OTHERWISE CLEAR IT
-0192 81 03                      CMPA   #$03                     IS IT CNTL C
-0194 26 F3                      BNE    RETURN                   NO RETURN CHAR
-
-                ******************
-                *   START RELAY TO FIRST OF BASIC
-                *
+                ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+                ;  INPUT ROUTINE
+                ;    CHKIO RETURN ZERO IF NO
+                ;    CHAR, OTHERWISE GRAB IT
+                ;    RESTART BASIC IF IT IS
+                ;    CONTROL-C
+01BA B6 FB FE   CHKIO           LDA    $FBFE                    ; CHAR LOC
+018D 27 FA                      BEQ    RETURN                   ; IF NO CHAR JUST SAY SO
+018F 7F FB FE                   CLR    $FBFE                    ; OTHERWISE CLEAR IT
+0192 81 03                      CMPA   #$03                     ; IS IT CNTL C
+0194 26 F3                      BNE    RETURN                   ; NO RETURN CHAR
+                ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+                ;   START RELAY TO FIRST OF BASIC
+                ;
 0196 16 04 A8   START           LBRA    STI
-
-                       ttttinntunintitnitinttt
-                       » TSTVE RETURN ADDRESS AND
-                       »     VALUE OF VARIABLE
-0199 8D      D7        TSTVE   BSR    IGNBLK
-019B 80      40                SUBA   #'S
-0190 25      EA                BOS    RETURN
-019F 27      OF                BEQ    RLYAT    IS STRING SPACE
-01 Al 81     IB                CMPA   #27      IS IN ALPHABET??
-01 A3 20     OE                BGE    TVN
-01A5 31      21                LEAY   1, Y
-01A7 48                        ASLA
-01 AB 40                       NEGA
-01A9 30      06                LEAX   A.U
-01 AB EC     84                LDD    ,X
-01 AD 10     FE                CLC
-01AF                           RATS   RETURN   WITH CARRY CLEAR
-01 BO 16     one       RLYAT   LBRA   ATSIGN
-01B3 1A      01        TVN     SEC             SET CARRY
-01B5                           RATS
-
-                       »   EXEC AND TABLE DISPATCH
-                       *
-                       «      SCAN TABLE FOR KEYWORD
-                       «       JUMP 1ro ASSOCIATED CODE
-01B6 9D      72        EXEC     J SR    <IGNBLK
-01B8 AE      F4                 LDX     CO, S3    GET TABLE ADDRESS FROM CALLER
-01 BA 10AF   E4                 STY     0,8
-01BD A6      AO        LOT      LDA     0, Y+
-01BF Al      80                 CMPA    0, X*     MATCH PRG AGAINST TABLE
-0101 27      FA                 BEQ     LOT
-0103 A6      IF                 LDA     -1, X     LOOK AT MISMATCH
-0105 2B      17                 BMI     EXECF     FOUND!
-0107 A6      3F                 LDA     -1, Y     IS IT AN ABBREV
-0109 81      2E                 CMPA    #' .
-01CB 27      OB                 BEQ     EXECP     YES' FORCE MATCH
-01CD 10AE    E4                 LDY     0,8       RESTORE PROG PTR
-01 DO A6     80        EXEC1    LDA     0,X+
-01D2 2A      FC                 BPL     EXEC 1    SKIP REST OF KEYWORD IN TABLE
-01D4 A6      80                 LDA     0, X*
-01D6 20      E5                 BRA     LOT       RETRY
-01D8 A6      80        EXECP    LDA     , X+
-01 DA 2A     FC                 BPL     EXECP
-01 DC 31     21                 LEAY    1,Y
-01 DE 31     3F        EX EOF   LEAY    — 1, Y    BACK UP PRG PTR
-01E0 E6      84                 LDB     0, X      NEXT TRANSFER BYTE
-01E2 84      7F                 ANDA    #S7F
-01E4 30      8D FE18            LEAX    0, PCR
-01E8 30      SB                 LEAX    D, X
-01EA AF      E4                 STX     0,8
+                ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+                ; TSTVE RETURN ADDRESS AND
+                ;     VALUE OF VARIABLE
+0199 8D D7      TSTVE           BSR     IGNBLK
+019B 80 40                      SUBA    #'@
+0190 25 EA                      BCS     RETURN
+019F 27 0F                      BEQ     RLYAT                   ; IS STRING SPACE
+01A1 81 1B                      CMPA    #27                     ; IS IN ALPHABET??
+01A3 20 0E                      BGE     TVN
+01A5 31 21                      LEAY    1,Y
+01A7 48                         ASLA
+01A8 40                         NEGA
+01A9 30 06                      LEAX    A,U
+01AB EC 84                      LDD     ,X
+01AD 10 FE                      CLC
+01AF                            RATS    RETURN                  ; WITH CARRY CLEAR
+01B0 16 01 1C   RLYAT           LBRA    ATSIGN
+01B3 1A 01      TVN             SEC                             ; SET CARRY
+01B5                            RATS
+                ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+                ;   EXEC AND TABLE DISPATCH
+                ;
+                ;      SCAN TABLE FOR KEYWORD
+                ;       JUMP 1ro ASSOCIATED CODE
+01B6 9D 72      EXEC            JSR     <IGNBLK
+01B8 AE F4                      LDX     [0, S]                  ; GET TABLE ADDRESS FROM CALLER
+01BA 10 AF E4                   STY     0,8
+01BD A6 A0      LCT             LDA     0,Y+
+01BF A1 80                      CMPA    0,X+                    ; MATCH PRG AGAINST TABLE
+01C1 27 FA                      BEQ     LCT
+01C3 A6 1F                      LDA     -1,X                    ; LOOK AT MISMATCH
+01C5 2B 17                      BMI     EXECF                   ; FOUND!
+01C7 A6 3F                      LDA     -1,Y                    ; IS IT AN ABBREV
+01C9 81 2E                      CMPA    #'.
+01CB 27 0B                      BEQ     EXECF                   ; YES! FORCE MATCH
+01CD 10 AE E4                   LDY     0,8                     ; RESTORE PROG PTR
+01D0 A6 80      EXEC1           LDA     0,X+
+01D2 2A FC                      BPL     EXEC1                   ; SKIP REST OF KEYWORD IN TABLE
+01D4 A6 80                      LDA     0,X+
+01D6 20 E5                      BRA     LCT                     ; RETRY
+01D8 A6 80      EXECP           LDA     ,X+
+01DA 2A FC                      BPL     EXECP
+01DC 31 21                      LEAY    1,Y
+01DE 31 3F      EXECF           LEAY    —1,Y                    ; BACK UP PRG PTR
+01E0 E6 84                      LDB     0,X                     ; NEXT TRANSFER BYTE
+01E2 84 7F                      ANDA    #$7F
+01E4 30 8D FE 18                LEAX    0,PCR
+01E8 30 SB                      LEAX    D,X
+01EA AF E4                      STX     0,S
 01EC 39                         RTS
 
                        »
@@ -1105,4 +1099,3 @@ Dr. Dobb ’s Journal, Issue 55, May 1981
                                            0748 59          DI VR     ROLB
                                            0749 49                    ROLA
                                            074A E3   Al               ADDD     1,8
-
