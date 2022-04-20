@@ -629,125 +629,121 @@ O3D6 17 01 25                   LBSR    GETLN                   ; GET THE INPUT 
 042F ED 46                      STD     STKGOS,U
 0431 AF 42                      STX     CURRNT,U
 0433 17 01 BA                   LBSR    POPA                    ; RESTORE FOR—NEXT ENVIRONMENT
-0436 OE SC                      CMP     <FINE
+0436 0E SC                      CMP     <FINE
 
                 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
                 ; NEXT
                 ;
-0438                            HERE     'NEXT'
-0438 AE 48                 LDX      LOPVAR,U    IF NO FOR THEN
-043A 27 OF                 BEQ      NEXT2       COMPLAIN LOUDLY
-0430 9D 99                 □ SR     <TSTVE
-043E 24 02                 BCC      NEXTO       IF NO VARIABLE SPECIFIED
-0440 AE 48                 LDX      LOPVAR,U    THEN UST USE LATEST FOR VARIABLE
-0442 AC 48      NEXTO      CMPX     LOPVAR,U
-0444 27 07                 BEQ      NEXT3
-0446 17 01A7               LBSR     POPA
-0449 26 F7                 BNE      NEXTO
-0448 OE 2C      NEXT2      □ MP     <QHOW
-044D EC 84        NEXT3     LDD        0,X       AND PUT VALUE INTO ACCOM
-044F E3 4A                  ADDD       LOPINC,U
-0451 ED 84                  STD        0,X
-0453 6D 4A                  TST        LOPINC,U WHICH DIRECTION ARE WE GOING?
-0455 28 OF                  SMI        NEXT4
-0457 10 A3 4C                  CMPD       LOPLMT,U
-045A 2E OE                  BGT       NEXT5      DONE
-045C AE 4E         NEXT6    LDX        LOPLN,U
-045E AF 42                  STX      CURRNT,U
-0460 10 AE C8 10               LDY        LOPPT,U
-0464 OE 5C                 □MP       <FINE
-0466 A3 4C         NEXT4    SUBD       LOPLMT,U
-0468 2C F2                 BGE        NEXT6
-046A 17 01 83      NEXT5    LBSR        POPA
-046D OE 5C                 JMP        <FINE
-                ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-                        • FOR
-                        •
-046F                         HERE          FOR'
-046F 20     05                BRA       FORE       JUMP AROUND DEFAULT STMT CODE
-                                TO ALLOW TABLE ENTRY
-                        r            FOR ASSIGNMENT TO BE
-                        »             PRIOR TO KEYWORDS OF
-                        r       FOR STATEMENT IN TABLE
-                        *      THIS IS REQUIRED BY THE
-                        r     MACRO HERE AND THE WAY IT
-                        r      WORKS
-0471                         HERE        ,         DEFAULT ASSIGNMENT
-0471 9D     38               JSR      <FIN         CAN BE EMPTY
-0473 16     FF7E             LBRA       LET        OTHERWISE TREAT AS LET
-                ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-                        • ACTUAL CODE OF FOR
-                        4
-0476 17     019E    FORE     LBSR       PUSHA      SAVE LOOP VARS
-0479 8D     45               BSR       BETVAL
-0478 AF     48               STX        LOPVAR,U SAVE ADDR OF LOOP VAR
-047D                         DISPAT
-0481                         HERE       'TO'       'FOR'1-1 'TO'
-0481 9D     ED               JSR      <EXPR
-0483 ED     4C               STD       LOPLMT,U STOPPING VAL
-0485 20     02               BRA      F0R2        JUMP AROUND DEFAULT
-0487                         HERE     ,           DID NOT HAVE 'TO'
-0487 OE     5E               JMP      <QWHAT      SO COMPLAIN
-0489                F0R2     DISPAT
-048D                         HERE     STEP'
-048D 9D     ED               JSR       <EXPR
-04BF 20     03               BRA       F0R3
-0491                         HERE       ,         NO STEP VALUE
-0491 CC     0001             LDD       #1          SO DEFAULT TO ONE
-0494 ED     4A      F0R3     STD       LOPINC,U
-0496 AE     42               LDX       CURRNT,U
-0498 AF     4E               STX       LOPLN,U    LOOP LINE NUMBER
-049A 10AF   C8 10            STY     LOPPT,U      LOOP PROG POINTER
-049E 31     76              LEAY       -10,S      START LOOKING AT OLD ’PUSHA’ RECOF
-DS
-04AO    31      2A      F0R7    LEAY    10, Y
-04A2    AE      A4              LDX     0, Y       GET LOOP VAR ADDRESS
-04A4    27      14              BEQ     F0R8       EXHAUSTED ALL FORS
-04A6    AC      48              CMPX    LOPVAR,U   IS OLD SAME AS THIS VAR?
-04A8    26      F6              BNE     F0R7
-04AA    30      2A              LEAX    ♦ 10, Y    FOUND MATCH MUST DELETE IT
-04AC    10EF    E3              STS     ,—S        SAVE STACK POINTER
-04AF    A6      A2      F0R7L   LDA     ,-Y
-04B1    A7     82                STA    ,-x
-04B3    10AC   E4                CMPY   0,3
-04 B6   2E     F7                BGT    F0R7L
-04B8    32     02                LEAS   2, X       CUT BACK STACK
-04BA    10AE   C8 10   F0R8      LDY    LOPPT,U    GET PROG POINTER
-04 BE   OE     2C                □ MP   <FINE
+0438                            HERE    'NEXT'
+0438 AE 48                      LDX     LOPVAR,U                ; IF NO FOR THEN
+043A 27 0F                      BEQ     NEXT2                   ; COMPLAIN LOUDLY
+0430 9D 99                      JSR     <TSTVE
+043E 24 02                      BCC     NEXTO                   ; IF NO VARIABLE SPECIFIED
+0440 AE 48                      LDX     LOPVAR,U                ; THEN UST USE LATEST FOR VARIABLE
+0442 AC 48      NEXTO           CMPX    LOPVAR,U
+0444 27 07                      BEQ     NEXT3
+0446 17 01 A7                   LBSR    POPA
+0449 26 F7                      BNE     NEXTO
+0448 0E 2C      NEXT2           CMP     <QHOW
+044D EC 84      NEXT3           LDD     0,X                     ; AND PUT VALUE INTO ACCOM
+044F E3 4A                      ADDD    LOPINC,U
+0451 ED 84                      STD     0,X
+0453 6D 4A                      TST     LOPINC,U                ; WHICH DIRECTION ARE WE GOING?
+0455 28 0F                      SMI     NEXT4
+0457 10 A3 4C                   CMPD    LOPLMT,U
+045A 2E 0E                      BGT     NEXT5                   ; DONE
+045C AE 4E      NEXT6           LDX     LOPLN,U
+045E AF 42                      STX     CURRNT,U
+0460 10 AE C8 10                LDY     LOPPT,U
+0464 OE 5C                      CMP     <FINE
+0466 A3 4C      NEXT4           SUBD    LOPLMT,U
+0468 2C F2                      BGE     NEXT6
+046A 17 01 83   NEXT5           LBSR    POPA
+046D OE 5C                      JMP     <FINE
 
-04C0 17        FCD6    SETVAL    LBSR   TSTVE      MUST BE VARIABLE
-04C3 22        11                BCS    QW1        NO VARIABLE
-04C5 34        10                PSHS   X
-04C7                             TSTC   ’-,QW1
-04CF 90        ED                JSR    <EXPR      EVALUATE THE EXPRESSION
-040 L 32       10                PULS   X
-0403 ED        84                STD    0,X        LEAVE ADDRESS IN X     <FOR USES IT>
-0402                             RATS
-04D6 OE        2E      QW1       J MP   <QWHAT     RELAY TO QWHAT
                 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-                       » UTILITIES AN! EXTRAS
-                       t
-                       * FINDLINE LINE NUMBER IN D
-04D8    4D             FNDLN    TSTA
-04D9    102B
-          FC4F                 LBMI   QHOW      NEGATIVE LINE NUM
-0400    318D 0296              LEAY   TXTBGN,PCR INITIAL LINE PTR
-04EL      44
-        10AC           FNDLNP CNPY    TXTUNF,U PASSED END?
-04E4    22EF                   BHI    RETURN
-04E6      A4
-        10A3                   CMPD   0, Y      LOOK AT LINE NUMBER
-04E9    23EA                   BLS    RETURN    IF REG O LINE NUM
-             04EB      FNDNXT EQU     r
-04EB 10AC 44                   CNPY   TXTUNF,U DONT SCAN PAST END
-04EE 22   E2                   BHI    RETURN
-04F0 31   22                   LEAY   2, Y
-04F2 34   02                   PSHS   A         SAVE LINE NUMB HIGH BYTE
-04F4 86   OD                   LDA    • 13
-04F6 Al   AO           Fl      CMPA   ,¥♦
-04FB 26   FC                   BNE    Fl        SCAN TO CR OF LINE
-04FA 32   02                   PULS   A         REGAIN HIGH LINE NUM
-04FC 20   E3                   BRA    FNDLNP    TRY THIS LINE
+                ; FOR
+                ;
+046F                            HERE    'FOR'
+046F 20 05                      BRA     FORE                    ; JUMP AROUND DEFAULT STMT CODE
+                ;   TO ALLOW TABLE ENTRY
+                ;      FOR ASSIGNMENT TO BE
+                ;      PRIOR TO KEYWORDS OF
+                ;      FOR STATEMENT IN TABLE
+                ;      THIS IS REQUIRED BY THE
+                ;      MACRO HERE AND THE WAY IT
+                ;      WORKS
+0471                            HERE    ,                       ; DEFAULT ASSIGNMENT
+0471 9D 38                      JSR     <FIN                    ; CAN BE EMPTY
+0473 16 FF 7E                   LBRA    LET                     ; OTHERWISE TREAT AS LET
+                ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+                ; ACTUAL CODE OF FOR
+                ;
+0476 17 01 9E   FORE    LBSR            PUSHA                   ; SAVE LOOP VARS
+0479 8D 45              BSR             BETVAL
+0478 AF 48              STX             LOPVAR,U                ; SAVE ADDR OF LOOP VAR
+047D                    DISPAT
+0481                    HERE            'TO'                    ; 'FOR'1-1 'TO'
+0481 9D ED              JSR             <EXPR
+0483 ED 4C              STD             LOPLMT,U                ; STOPPING VAL
+0485 20 02              BRA             FOR2                    ; JUMP AROUND DEFAULT
+0487                    HERE            ,                       ; DID NOT HAVE 'TO'
+0487 OE 5E              JMP             <QWHAT                  ; SO COMPLAIN
+0489            FOR2    DISPAT
+048D                    HERE            'STEP'
+048D 9D ED              JSR             <EXPR
+04BF 20 03              BRA             FOR3
+0491                    HERE            ,                       ; NO STEP VALUE
+0491 CC 00 01           LDD             #1                      ; SO DEFAULT TO ONE
+0494 ED 4A      FOR3    STD             LOPINC,U
+0496 AE 42              LDX             CURRNT,U
+0498 AF 4E              STX             LOPLN,U                 ; LOOP LINE NUMBER
+049A 10 AF C8 10        STY             LOPPT,U                 ; LOOP PROG POINTER
+049E 31 76              LEAY            -10,S                   ; START LOOKING AT OLD ’PUSHA’ RECOFDS
+04A0 31 2A      FOR7    LEAY            10,Y
+04A2 AE A4              LDX             0,Y                     ; GET LOOP VAR ADDRESS
+04A4 27 14              BEQ             FOR8                    ; EXHAUSTED ALL FORS
+04A6 AC 48              CMPX            LOPVAR,U                ; IS OLD SAME AS THIS VAR?
+04A8 26 F6              BNE             FOR7
+04AA 30 2A              LEAX            +10,Y                   ; FOUND MATCH MUST DELETE IT
+04AC 10 EF E3           STS             ,—S                     ; SAVE STACK POINTER
+04AF A6 A2      FOR7L   LDA             ,-Y
+04B1 A7 82              STA             ,-X
+04B3 10 AC E4           CMPY            0,3
+04B6 2E F7              BGT             FOR7L
+04B8 32 02              LEAS            2, X                    ; CUT BACK STACK
+04BA 10 AE C8 10 FOR8   LDY             LOPPT,U                 ; GET PROG POINTER
+04BE 0E 2C              CMP             <FINE
+04C0 17 FC D6   SETVAL  LBSR            TSTVE                   ; MUST BE VARIABLE
+04C3 22 11              BCS             QW1                     ; NO VARIABLE
+04C5 34 10              PSHS            X
+04C7                    TSTC            ’=,QW1
+04CF 90 ED              JSR             <EXPR                   ; EVALUATE THE EXPRESSION
+04D1 32 10              PULS            X
+04D3 ED 84              STD             0,X                     ; LEAVE ADDRESS IN X     <FOR USES IT>
+04D5                    RATS
+04D6 0E 2E      QW1     JMP             <QWHAT                  ; RELAY TO QWHAT
+                ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+                ; UTILITIES AN! EXTRAS
+                ;
+                ; FINDLINE LINE NUMBER IN D
+04D8 4D         FNDLN   TSTA
+04D9 10 2B FC 4F        LBMI            QHOW                    ; NEGATIVE LINE NUM
+04DD 31 8D 02 96        LEAY            TXTBGN,PCR              ; INITIAL LINE PTR
+04E1 10 AC 44   FNDLNP  CNPY            TXTUNF,U                ; PASSED END?
+04E4 22 EF              BHI             RETURN
+04E6 10 A3 A4           CMPD            0,Y                     ; LOOK AT LINE NUMBER
+04E9 23 EA              BLS             RETURN                  ; IF REG <= LINE NUM
+        04EB    FNDNXT  EQU             *
+04EB 10 AC 44           CNPY            TXTUNF,U                ; DONT SCAN PAST END
+04EE 22  E2             BHI             RETURN
+04F0 31  22             LEAY            2,Y
+04F2 34  02             PSHS            A                       ; SAVE LINE NUMB HIGH BYTE
+04F4 86  0D             LDA             #13
+04F6 A1  A0     F1      CMPA            ,Y+
+04FB 26  FC             BNE             F1                      ; SCAN TO CR OF LINE
+04FA 32  02             PULS            A                       ; REGAIN HIGH LINE NUM
+04FC 20  E3             BRA             FNDLNP                  ; TRY THIS LINE
                 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
                        * GETLN      GE1 INPUT LINE AND
                        *            EDIT ACCORDING TO
@@ -1119,3 +1115,36 @@ O7OE A7   A2               STA      2,8       SIGN POSITION
 0748 59          DI VR     ROLB
 0749 49                    ROLA
 074A E3   Al               ADDD     1,8
+074C   2A    FO                  BPL      DIV2
+074E   68    66          DIV3    ASL      6,8
+0750   69    65                  ROL      5,8
+0752   30    IF                  LEAX     -1,X
+0754   26    F2                  BNE      DI VR
+0756   E3    61                  ADDD     1,6
+                0758   DIV4    EQU      ♦
+                        ♦RAW REMAINDER   IN D, QUO IN 5,8
+0758 ED      61                  STD      1,8       SAVE IT FOR A WHILE
+075A 68      E4                  ASL      0,6       SHOULD WE COMPLEMENT QUO?
+075C 24      06                  BCC      NCQ       NO
+075E 4F                          CLRA
+075F 5F                          CLRB
+0760 A3      65                  SUBD     5,6
+0762 ED      65                  STD      5,S
+0764 68      EO          NCQ     ASL      0,6*         SHOULD WE COMPLEMENT REMAINDER?
+0766 24      06                  BCC      NCR          NO
+0768 4 F                         CLRA
+0769 5F                          CLRB
+076A A3      E4                  SUBD     0,8
+076C ED      E4                  STD      0,8
+076E AE      E4          NCR     LDX      0,8          GET REMAINDER
+0770 EC      64                  LDD      4,8
+0772 AF      64                  STX      4, S
+0774 ED      El                  STD      0,8**        SET FLAGS, DISCARD STORE
+0776 39                          RTS                   AND DISSAPEAR
+                        ♦
+                        ♦
+                0777   TXTBGN  EQU      ♦
+0777                             RMB      1000         MAKE SOME ROOM FOR PROGRAM
+0B5F                     DATAS   RMB      BUFEND
+                OBBF   EOP     EQU      ♦
+                                END      START
