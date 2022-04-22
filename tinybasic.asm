@@ -9,16 +9,17 @@ return          set             *
                 rts
                 endm
 
+ ; This macro had code to fixup some issues in source, will fix code in place
 here            macro
 tmp             set             *
                 org             table
-                ifc             &1,,1
-                fcc             &1
+;                ifeq            &1,,1
+                FCB             &1
                 fdb             tmp+$8000
-                ifc             'goto',&1
-                fcc             "go to"
-                fdb             tmp+$8000
-                endif
+;                ifc             'goto',&1
+;                fcc             "go to"
+;                fdb             tmp+$8000
+;                endif
 table           set             *
                 org             tmp
                 endm
@@ -216,24 +217,24 @@ tvn             sec                             ; set carry
 ;       jump 1ro associated code
 exec            jsr     <ignblk
                 ldx     [0,s]                   ; get table address from caller
-                sty     0,s
-lct             lda     0,y+
-                cmpa    0,x+                    ; match prg against table
+                sty     0,s                     ; save table address        
+lct             lda     ,y+
+                cmpa    ,x+                     ; match prg against table
                 beq     lct
                 lda     -1,x                    ; look at mismatch
                 bmi     execf                   ; found!
                 lda     -1,y                    ; is it an abbrev
                 cmpa    #'.
                 beq     execf                   ; yes! force match
-                ldy     0,8                     ; restore prog ptr
-exec1           lda     0,x+
+                ldy     0,s                     ; restore prog ptr
+exec1           lda     ,x+
                 bpl     exec1                   ; skip rest of keyword in table
-                lda     0,x+
+                lda     ,x+
                 bra     lct                     ; retry
 execp           lda     ,x+
                 bpl     execp
                 leay    1,y
-execf           leay    —1,y                    ; back up prg ptr
+execf           leay   -1,y                     ; back up prg ptr
                 ldb     0,x                     ; next transfer byte
                 anda    #$7f
                 leax    0,pcr
@@ -294,7 +295,7 @@ xp18            bsr     expr2
 expr2           bsr     expr3                   ; go after left hand operand
 expr21          pshs    d
                 jsr     <ignblk
-                cmpa
+                cmpa    #'+
                 bne     xp290
                 leay    +1,y
                 bsr     expr3
@@ -303,7 +304,7 @@ xp235           bvc     expr21                  ; and again
                 jmp     qhow                    ; overflow
 xp290           cmpa    #'-
                 bne     xp291
-                leay    1, y
+                leay    1,y
                 bsr     expr3
                 pshs    d
                 ldd     2,s
@@ -323,7 +324,7 @@ exp3el          dispat
                 here    '*'
                 bsr     expr4
                 lbsr    mult
-                bed     exp3el                  ; signal error if d reg has significant bits
+                beq     exp3el                  ; signal error if d reg has significant bits
 exp3er          jmp     <qhow
                 here    '/'
                 bsr     expr4
@@ -349,8 +350,8 @@ expr4           dispat on                       ; functions
                 ldd     #%100011
                 lbsr    mult
                 puls    d
-                addd    #$o123
-                anda    #47f                    ; mask sign
+                addd    #$0123
+                anda    #$7f                    ; mask sign
                 std     seed,u
                 pshs    d                       ; save for division
                 bsr     farm
@@ -367,7 +368,7 @@ expr4           dispat on                       ; functions
                 pshs    d
                 clra
                 clrb
-                subd    s++
+                subd    ,s++
                 jmp     tvhow                   ; implied return if no overflow
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -575,7 +576,7 @@ ip3             tfr     x,d                     ; regain address of var
                 pshs    y
                 ldx     currnt,u
                 pshs    x
-                leax    ip3.pcr                 ; point currnt to ng as input flag
+                leax    ip3,pcr                 ; point currnt to ng as input flag
                 stx     currnt,u
                 sts     stkinp,u                ; save stack pointer
                 pshs    d                       ; the destination address
@@ -583,14 +584,14 @@ ip3             tfr     x,d                     ; regain address of var
                 lbsr    getln                   ; get the input from user
                 leay    buffer,u
                 jsr     expr                    ; and evaluate it as an expression
-                std     [0,s++]                 ; save value in var
+                std     [,s++]                 ; save value in var
                 puls    x
                 stx     currnt,u
                 puls    y
 ip4             puls    d                       ; purge junk
                 tstc    "',",ips                ; is next a comma
                 bra     ip1                     ; yes, do another variable
-ips             cmp     <fine                   ; finish
+ips             jmp     <fine                   ; finish
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; let      the    assignment statement
@@ -604,7 +605,7 @@ let             lbsr    setval                  ; do the assignment
 ; gosub
 ;
 goerr           puls    y                       ; regain current line
-                cmp     <qhow                   ; and print diagnostic
+                jmp     <qhow                   ; and print diagnostic
                 here    'gosub'
                 lbsr    pusha                   ; save for parameters
                 jsr     <expr                   ; get val in d
@@ -633,7 +634,7 @@ goerr           puls    y                       ; regain current line
                 std     stkgos,u
                 stx     currnt,u
                 lbsr    popa                    ; restore for—next environment
-                cmp     <fine
+                jmp     <fine
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; next
@@ -648,18 +649,18 @@ nexto           cmpx    lopvar,u
                 beq     next3
                 lbsr    popa
                 bne     nexto
-next2           cmp     <qhow
+next2           jmp     <qhow
 next3           ldd     0,x                     ; and put value into accom
                 addd    lopinc,u
                 std     0,x
                 tst     lopinc,u                ; which direction are we going?
-                smi     next4
+                bmi     next4
                 cmpd    loplmt,u
                 bgt     next5                   ; done
 next6           ldx     lopln,u
                 stx     currnt,u
                 ldy     loppt,u
-                cmp     <fine
+                jmp     <fine
 next4           subd    loplmt,u
                 bge     next6
 next5           lbsr    popa
@@ -710,14 +711,14 @@ for7    leay            10,y
         cmpx            lopvar,u                ; is old same as this var?
         bne             for7
         leax            +10,y                   ; found match must delete it
-        sts             ,—s                     ; save stack pointer
+        sts             ,--s                    ; save stack pointer
 for7l   lda             ,-y
         sta             ,-x
-        cmpy            0,3
+        cmpy            0,s
         bgt             for7l
-        leas            2, x                    ; cut back stack
+        leas            2,x                     ; cut back stack
 for8    ldy             loppt,u                 ; get prog pointer
-        cmp             <fine
+        jmp             <fine
 setval  lbsr            tstve                   ; must be variable
         bcs             qw1                     ; no variable
         pshs            x
@@ -728,18 +729,18 @@ setval  lbsr            tstve                   ; must be variable
         rats
 qw1     jmp             <qwhat                  ; relay to qwhat
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; utilities an! extras
+; utilities and extras
 ;
 ; findline line number in d
 fndln   tsta
         lbmi            qhow                    ; negative line num
         leay            txtbgn,pcr              ; initial line ptr
-fndlnp  cnpy            txtunf,u                ; passed end?
+fndlnp  cmpy            txtunf,u                ; passed end?
         bhi             return
         cmpd            0,y                     ; look at line number
         bls             return                  ; if reg <= line num
 fndnxt  equ             *
-        cnpy            txtunf,u                ; dont scan past end
+        cmpy            txtunf,u                ; dont scan past end
         bhi             return
         leay            2,y
         pshs            a                       ; save line numb high byte
@@ -760,7 +761,7 @@ getln   jsr             <outc                   ; prompt
 gl1     jsr             <chkio
         beq             gl1                     ; nothing yet
         jsr             <outc                   ; echo
-        cmpa            #$oa                    ; line feed
+        cmpa            #$0a                    ; line feed
         beq             gl1                     ; ignore it
         cmpa            #$1f&'h                 ; delete code
         beq             gl3
@@ -771,7 +772,7 @@ gl1     jsr             <chkio
         beq             old                     ; return
         cmpy            s                       ; with buffer end
         bne             gl1
-gl3     cmpy            2,8                     ; anything in buffer?
+gl3     cmpy            2,s                     ; anything in buffer?
         beq             gl4
         leay            -1,y
         jsr             <space
@@ -779,7 +780,7 @@ gl3     cmpy            2,8                     ; anything in buffer?
         jsr             <outc                   ; and back up over space
         bra             gl1
 gl4     jsr             <crlf
-        leas            4,5                     ; pop off temporaries
+        leas            4,s                     ; pop off temporaries
         lda             #'?                     ; question mark prompt
         bra             getln
 glo     leas            4,s
@@ -797,7 +798,7 @@ prtnum  ldx             #10
         sex
         tfr             d,y                     ; put into counter
 
-        ldd             0,s++                   ; set flags
+        ldd             ,s++                    ; set flags
         bpl             pn2                     ; complement if negative
         coma
         comb
@@ -865,9 +866,9 @@ qt1     bsr             prtstg
         lbne            runnxl                  ; run next line if hit return
         rats            return                  ; w zero set
 qt3     tstc            $27,qt4                 ; single quote
-        ldb             ##27                    ; print till hatch
+        ldb             #$27                    ; print till hatch
         bra             qt1
-qt4     tstc            '',return
+qt4     tstc            '!,return
         lda             #$8d                    ; funny return
         jsr             <outc                   ; apple does not support this
         clra                                    ; set zero status
@@ -885,13 +886,13 @@ error   pshs    y                               ; save line nuhber
         ldy     currnt,u                        ; is this in
         ldd     0,y                             ; immediate mode?
         beq     erro
-        lbni    inperr                          ; input command??
+        lbmi    inperr                          ; input command??
         bsr     prtln                           ; print up to zero
         lda     #'?
         jsr     <outc                           ; print question
         puls    a
-        sta     0,-y                            ; restore line
-        leas    2,8                             ; pop phony return
+        sta     ,-y                             ; restore line
+        leas    2,s                             ; pop phony return
         bsr     prtstl
 erro    jmp     <start
 
@@ -906,7 +907,7 @@ popa    ldd     2,s
         std     lopinc,u
         ldd     6,s
         std     loplmt,u
-        ldd     8,8
+        ldd     8,s
         std     lopln,u
         ldd     10,s
         std     loppt,u
@@ -941,7 +942,8 @@ pu1     pshs   x
 ;    initialize and enter command
 ;     mode
 ;
-ok      fcc    'ok',13
+ok      fcc    'ok'
+        fcb    $13 
 sti     leax   tstnum,pcr
         tfr     x,d
         tfr     a,dp
@@ -961,13 +963,13 @@ st3     lda     #'>                             ; prompt to enter a statement
         pshs    cc,d
         jsr     <ignblk
         ldd     1,s                             ; regain line num
-        std     ,—y                             ; put line number in front
+        std     ,-y                             ; put line number in front
         sty     currnt,u                        ; make the current line
         puls    cc,d
         lbeq    direct                          ; do immediate node if no leading number
 ; y points to beginning of line
 ; and top of stack points to end
-        pgh8   y
+        pshs   y
         lbsr   fndln
         pshs   y                                ; tos->text area
         bne    st4                              ; insert
@@ -1006,9 +1008,9 @@ st2le   lda     ,-y
 ;  tos points to beginning of text
 ;  n06 points to end of buffer
         puls    x
-st3le   lda     ,x*
-        sta     ,y*
-        cmpx    ,8
+st3le   lda     ,x+
+        sta     ,y+
+        cmpx    ,s
         blo     st3le
         puls    x                               ; discard garbage
         bra    st3
@@ -1026,7 +1028,7 @@ st3le   lda     ,x*
 ; as the high ht of tos
 ;    neg is set on the sign
 ; of   tos
-mult    leas    -3,8
+mult    leas    -3,s
         bsr     unsign                                  ; returns w/d=0
         ldx     +16
         ror     5,s
@@ -1123,7 +1125,7 @@ div4    equ      *
         clrb
         subd     5,s
         std      5,s
-ncq     asl      0,s+                                   ; should we complement remainder?
+ncq     asl      ,s+                                   ; should we complement remainder?
         bcc      ncr                                    ; no
         clra
         clrb
@@ -1132,7 +1134,7 @@ ncq     asl      0,s+                                   ; should we complement r
 ncr     ldx      0,s                                    ; get remainder
         ldd      4,s
         stx      4,s
-        std      0,s++                                  ; set flags, discard store
+        std      ,s++                                  ; set flags, discard store
         rts                                             ; and dissapear
 
 txtbgn  equ     *
