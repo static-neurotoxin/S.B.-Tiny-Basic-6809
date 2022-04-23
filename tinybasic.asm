@@ -32,7 +32,7 @@ dispat          macro
 tstc            macro
                 jsr             <ignblk
                 cmpa            #&1
-                bne             &2
+                lbne             &2
                 leay            1,y
                 endm
 
@@ -528,7 +528,7 @@ pr6             jsr     <crlf                   ; end of statement with
                 jsr     <expr
                 pshs    y                       ; save txt pointer for error sub
                 lbsr    fndln
-                bne     goerr                   ; couldn’t find destination
+                lbne    goerr                   ; couldn’t find destination
                 leas    2,s                     ; discard old line num
                 bra     runtsl
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
