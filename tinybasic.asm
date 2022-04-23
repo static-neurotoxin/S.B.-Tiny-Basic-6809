@@ -103,7 +103,7 @@ tn1             jsr             <ignblk
                 aslb
                 rola                            ; times ten
                 addb            ,s+             ; add in digit
-                adca            #o
+                adca            #0
                 std             0,s             ; store accom back
                 bpl             tn1             ; no err? then get next digit
 qhow            lbsr            error
@@ -354,7 +354,7 @@ expr4           dispat on                       ; functions
                 anda    #$7f                    ; mask sign
                 std     seed,u
                 pshs    d                       ; save for division
-                bsr     farm
+                bsr     parm
                 lble    qhow                    ; if zero or neg
                 lbsr    div
                 puls    d,pc                    ; get remainder and return
@@ -393,11 +393,11 @@ size            tfr     s,d
 ;  subexpression
 ;
                 here    ,
-                jsr     t6tve                   ; not a function must be var
+                jsr     tstve                   ; not a function must be var
                 bcc     return
-                jsr     ctstnum                 ; not var try num
+                jsr     <tstnum                 ; not var try num
                 bne     return                  ; digit cnt<>0 means number
-farm            tstc    '<,xp43
+parm            tstc    '<,xp43
                 jsr     <expr
                 pshs    cc,d                    ; save conditions of expression
                 tstc    '),xp43
@@ -412,8 +412,8 @@ xp43            jmp     qwhat
 ; bananas
 ;
 atsign          leay    1,y
-                bsr     farm                    ; get the index
-                lbmi    show
+                bsr     parm                    ; get the index
+                lbmi    qhow
                 ldx     txtunf,u                ; get end of prog
                 leax    2,x
                 leax    d,x
@@ -447,12 +447,12 @@ ls1             lbhi    start                   ; hit end?
                 lbsr    prtln                   ; print the line
                 jsr     <chkio                  ; user interrupt?
                 lbsr    fndlnp                  ; find next line
-                bra     lsi
+                bra     ls1
 
                 here    'new'
                 jsr     <endchk                 ; abort if not only thing in stmt
                 leax    txtbgn-1,pcr
-                stx     txtunf.u                ; reset beginning of program ptr
+                stx     txtunf,u                ; reset beginning of program ptr
                 stx     hiwat,u                 ; and hi water string
                 jmp     <start
 
@@ -685,7 +685,7 @@ next5           lbsr    popa
 ; actual code of for
 ;
 fore    lbsr            pusha                   ; save loop vars
-        bsr             betval
+        bsr             setval
         stx             lopvar,u                ; save addr of loop var
         dispat
         here            'to'                    ; 'for'1-1 'to'
@@ -769,8 +769,8 @@ gl1     jsr             <chkio
         beq             gl4
         sta             ,y+
         cmpa            #$d
-        beq             old                     ; return
-        cmpy            s                       ; with buffer end
+        beq             glo                     ; return
+        cmpy            ,s                      ; with buffer end
         bne             gl1
 gl3     cmpy            2,s                     ; anything in buffer?
         beq             gl4
@@ -913,7 +913,7 @@ popa    ldd     2,s
         std     loppt,u
         puls    d
         leas    10,s
-        andcc   #sfb                            ; turn off zero
+        andcc   #$fb                            ; turn off zero
         tfr     d,pc
 popao   std     lopvar,u
         puls    d
@@ -949,7 +949,7 @@ sti     leax   tstnum,pcr
         tfr     a,dp
         leau    datas,pcr
         leas    varbgn,u
-        jsr     ccrlf
+        jsr     <crlf
         leay    ok,pcr                          ; print ok and prompt
         lbsr    prtstl
         clra                                    ; b is already zero
@@ -992,7 +992,7 @@ st4     ldd    4,s                              ; point to end of line
         leax    d,y                             ; add in length
         stx     txtunf,u                        ; update end pointer
         stx     hiwat,u
-        lda     good
+        lda     #$0d
         sta     0,x
 st2le   lda     ,-y
         sta     ,-x
@@ -1041,7 +1041,7 @@ m2      rora
         ror     6,s
 ; result is now in d cat 5,s
         leax    ,-x
-        bne     ml
+        bne     m1
 sign    tst     0,s                                     ; sign loc
         bpl     setflg
         coma
@@ -1067,7 +1067,7 @@ s2      cmpd    #$ffff                                  ; set flag
 unsign  std     3,s
         sta     2,s                                     ; sign position
         asr     2,s                                     ; double the sign
-        bpl     u82
+        bpl     us2
         clra
         clrb
         subd    3,s
