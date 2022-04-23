@@ -4,6 +4,9 @@
 ;   by james a. hinds
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+                pragma 6800compat
+                pragma 6809
+
 rats            macro
 return          set             *
                 rts
@@ -104,10 +107,10 @@ tn1             jsr             <ignblk
                 rola                            ; times ten
                 addb            ,s+             ; add in digit
                 adca            #0
-                std             0,s             ; store accom back
+                std             $00,s           ; store accom back
                 bpl             tn1             ; no err? then get next digit
 qhow            lbsr            error
-                fcc             'how?'
+                fcc             "HOW?"
                 fcb             $0d
 
 numout          tst             3,s             ; set flags on g digits
@@ -144,12 +147,12 @@ endchk          tstc            $d,qwhat
 fine            bsr             fin             ; if error then fall through
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 qwhat           lbsr            error
-                fcc             'what?'
+                fcc             "WHAT?"
                 fcb             $0d
 
 
 qsorry          lbsr            error
-                fcc             'sorry'
+                fcc             "SORRY"
                 fcb             $0d
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -247,38 +250,38 @@ execf           leay   -1,y                     ; back up prg ptr
 expr            bsr     expr2
                 pshs    x                       ; save left hand value
                 dispat
-                here   '>='
+                here   ">="
                 bsr    xp18
                 bgt    zer                      ; m>=r
                 bra    one
 
-                here   '='
+                here   "="
                 bsr    xp18                     ; m=r
                 beq    one
                 bra    zer
 
-                here    '>'
+                here    ">"
                 bsr     xp18                    ; m>r
                 blt     one
                 bra     zer
 
-                here    '<='
+                here    "<="
                 bsr     xp18                    ; m<=r
                 bge     one
                 bra     zer
 
-                here    '='
+                here    "="
                 bsr     xp18
                 beq     one
                 bra     zer
 
-                here    '<'
+                here    "<"
                 bsr     xp18                    ; m<r
                 bls     zer
 one             incb
 zer             std     ,s                      ; to set flags
 
-                here    ''
+                here    ""
                 ldd    ,s++                     ; pop and set flags
                 rats   no                       ; logical op
 
@@ -321,12 +324,12 @@ xp291           puls    x,pc
 expr3           bsr     expr4
                 pshs    d
 exp3el          dispat
-                here    '*'
+                here    "*"
                 bsr     expr4
                 lbsr    mult
                 beq     exp3el                  ; signal error if d reg has significant bits
 exp3er          jmp     <qhow
-                here    '/'
+                here    "/"
                 bsr     expr4
                 std     -2,s                     ; set flags
                 beq     exp3er
@@ -344,7 +347,7 @@ exp3er          jmp     <qhow
 ;     is called (oh! no!) recursivly
 ;
 expr4           dispat on                       ; functions
-                here    'rnd'
+                here    "RND"
                 ldd     seed,u
                 pshs    d
                 ldd     #%100011
@@ -362,7 +365,7 @@ expr4           dispat on                       ; functions
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;   absolute value
 ;
-                here    'abs'
+                here    "ABS"
                 bsr     parm                    ; get the value
                 bpl     return
                 pshs    d
@@ -375,14 +378,14 @@ expr4           dispat on                       ; functions
 ;  size how much storage left
 ;    between stack and end of
 ;    program
-                here    'size'
+                here    "SIZE"
 size            tfr     s,d
                 subd    hiwat,u                 ; subtract end of string addr
                 rats
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; unary minus handled as fnct
-                here    '-'                     ; unary minus
+                here    "-"                     ; unary minus
                 jsr    <expr
                 coma
                 negb
@@ -392,7 +395,7 @@ size            tfr     s,d
 ; check for number,    variable or
 ;  subexpression
 ;
-                here    ''
+                here    ""
                 jsr     tstve                   ; not a function must be var
                 bcc     return
                 jsr     <tstnum                 ; not var try num
@@ -437,7 +440,7 @@ direct          leay   2,y                      ; step past line number
 ;      a given line number, otherwise
 ;      the whole shebang
 ;
-                here    'list'
+                here    "LIST"
                 jsr     <tstnum                 ; test if a ln #
                 pshs    d
                 jsr     <endchk                 ; if no # then use 0
@@ -449,7 +452,7 @@ ls1             lbhi    start                   ; hit end?
                 lbsr    fndlnp                  ; find next line
                 bra     ls1
 
-                here    'new'
+                here    "NEW"
                 jsr     <endchk                 ; abort if not only thing in stmt
                 leax    txtbgn-1,pcr
                 stx     txtunf,u                ; reset beginning of program ptr
@@ -464,7 +467,7 @@ ls1             lbhi    start                   ; hit end?
 ;    runnnl,runtsl and runsml
 ;    as program pointer <v) needs
 ;    care and feeding
-                here    'run'
+                here    "RUN"
                 jsr     <endchk
                 leay    txtbgn,pcr              ; first line
 runnxl          clra
@@ -480,7 +483,7 @@ runsml          jsr     <chkio                  ; run same line
 ;   stop will cause graceful
 ;    termination
 ;
-                here    'stop'
+                here    "STOP"
                 jsr     <endchk
                 jmp     <start
 
@@ -489,7 +492,7 @@ runsml          jsr     <chkio                  ; run same line
 ;       strings. with possible
 ;        format for digits
 ;
-                here    'print'
+                here    "PRINT"
                 lda     #6
                 sta     fldcnt,u
                 jsr     <ignblk
@@ -524,7 +527,7 @@ pr6             jsr     <crlf                   ; end of statement with
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;    goto
 ;
-                here    'goto'
+                here    "GOTO"
                 jsr     <expr
                 pshs    y                       ; save txt pointer for error sub
                 lbsr    fndln
@@ -534,7 +537,7 @@ pr6             jsr     <crlf                   ; end of statement with
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;    if
 ;
-                here    'if'
+                here    "IF"
                 jsr     expr                    ; evaluate the expression
                 bne     runsml                  ; if <> 0 then cont
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -544,7 +547,7 @@ pr6             jsr     <crlf                   ; end of statement with
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;   rem    ignore this whole line
 ;
-                here    'rem'                   ; looks like ’if 0’
+                here    "REM"                   ; looks like ’if 0’
                 ldy     currnt,u
                 ldd     #1
                 addd    0,y      current line plus one
@@ -555,7 +558,7 @@ pr6             jsr     <crlf                   ; end of statement with
 inperr          lds     stkinp,u                ; regain
                 puls    d,x,y                   ; currnt,junk,text ptr
                 std     currnt,u                ; and retry this input stmt
-                here    'input'
+                here    "INPUT"
 ip1             pshs    y                       ; save text pointer
                 lbsr    qtstg                   ; print quoted prompt
                 bne     ip2                     ; no try variable
@@ -596,7 +599,7 @@ ips             jmp     <fine                   ; finish
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; let      the    assignment statement
 ;
-                here    'let'
+                here    "LET"
 let             lbsr    setval                  ; do the assignment
                 tstc    ip5                     ; check end line
                 bra     let
@@ -606,7 +609,7 @@ let             lbsr    setval                  ; do the assignment
 ;
 goerr           puls    y                       ; regain current line
                 jmp     <qhow                   ; and print diagnostic
-                here    'gosub'
+                here    "GOSUB"
                 lbsr    pusha                   ; save for parameters
                 jsr     <expr                   ; get val in d
                 pshs    y                       ; save text pointer
@@ -625,7 +628,7 @@ goerr           puls    y                       ; regain current line
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;     return      rom gosub
 ;
-                here    'return'
+                here    "RETURN"
                 jsr     <endchk                 ; bad if not end of line
                 ldd     stkgos,u                ; reload stack pointer
                 lbeq    qhow                    ; too many returns
@@ -639,7 +642,7 @@ goerr           puls    y                       ; regain current line
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; next
 ;
-                here    'next'
+                here    "NEXT"
                 ldx     lopvar,u                ; if no for then
                 beq     next2                   ; complain loudly
                 jsr     <tstve
@@ -669,7 +672,7 @@ next5           lbsr    popa
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; for
 ;
-                here    'for'
+                here    "FOR"
                 bra     fore                    ; jump around default stmt code
 ;   to allow table entry
 ;      for assignment to be
@@ -688,14 +691,14 @@ fore    lbsr            pusha                   ; save loop vars
         bsr             setval
         stx             lopvar,u                ; save addr of loop var
         dispat
-        here            'to'                    ; 'for'1-1 'to'
+        here            "TO"                    ; 'for'1-1 'to'
         jsr             <expr
         std             loplmt,u                ; stopping val
         bra             for2                    ; jump around default
         here            ''                     ; did not have 'to'
         jmp             <qwhat                  ; so complain
 for2    dispat
-        here            'step'
+        here            "STEP"
         jsr             <expr
         bra             for3
         here            ''                       ; no step value
@@ -942,7 +945,7 @@ pu1     pshs   x
 ;    initialize and enter command
 ;     mode
 ;
-ok      fcc    'ok'
+ok      fcc    "OK"
         fcb    $13 
 sti     leax   tstnum,pcr
         tfr     x,d
