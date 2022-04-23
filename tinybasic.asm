@@ -14,7 +14,7 @@ here            macro
 tmp             set             *
                 org             table
 ;                ifeq            &1,,1
-                FCB             &1
+                FCC             \1
                 fdb             tmp+$8000
 ;                ifc             'goto',&1
 ;                fcc             "go to"
@@ -278,7 +278,7 @@ expr            bsr     expr2
 one             incb
 zer             std     ,s                      ; to set flags
 
-                here    .
+                here    ''
                 ldd    ,s++                     ; pop and set flags
                 rats   no                       ; logical op
 
@@ -333,7 +333,7 @@ exp3er          jmp     <qhow
                 lbsr    div
                 std     0,s                      ; replace rem by qou
                 bra     exp3el
-                here    ,
+                here    ''
                 puls    d,pc                    ; get result and return
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -392,7 +392,7 @@ size            tfr     s,d
 ; check for number,    variable or
 ;  subexpression
 ;
-                here    ,
+                here    ''
                 jsr     tstve                   ; not a function must be var
                 bcc     return
                 jsr     <tstnum                 ; not var try num
@@ -678,7 +678,7 @@ next5           lbsr    popa
 ;      this is required by the
 ;      macro here and the way it
 ;      works
-                here    ,                       ; default assignment
+                here    ''                       ; default assignment
                 jsr     <fin                    ; can be empty
                 lbra    let                     ; otherwise treat as let
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -692,13 +692,13 @@ fore    lbsr            pusha                   ; save loop vars
         jsr             <expr
         std             loplmt,u                ; stopping val
         bra             for2                    ; jump around default
-        here            ,                       ; did not have 'to'
+        here            ''                     ; did not have 'to'
         jmp             <qwhat                  ; so complain
 for2    dispat
         here            'step'
         jsr             <expr
         bra             for3
-        here            ,                       ; no step value
+        here            ''                       ; no step value
         ldd             #1                      ; so default to one
 for3    std             lopinc,u
         ldx             currnt,u
