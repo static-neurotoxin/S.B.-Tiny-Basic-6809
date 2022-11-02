@@ -1,9 +1,11 @@
 * PALO ALTO TINY BASIC BY LI-CHEN WANG
 *
-*CONVERTED FOR. 'THE MILL' OF STELLATION TWO
+* CONVERTED FOR. 'THE MILL' OF STELLATION TWO
 *  BY JAMES A. HINDS
 *
 *******************************
+        NAM 'Santa Barbara Tiny Basic'
+    
 RATS    MACRO
 RETURN  SET     *
         RTS
@@ -24,12 +26,12 @@ TABLE   SET     *
         ENDM
 *
 DISPAT  MACRO
-        JSR     <EXEC
+&0	    JSR     <EXEC
         FDB     TABLE
         ENDM
 *
 TSTC    MACRO
-        JSR     <IGNBLK
+&0	    JSR     <IGNBLK
         CMPA    #&1
         BNE     &2
         LEAY    1,Y
@@ -41,7 +43,7 @@ VARBGN  EQU     -27*2   VARIABLE SPACE
 OCSW    RMB     1       OUTPUT ON/OFF FLAG
 FLDCNT  RMB     1       PLACES FOR NUMERIC OUTPUT
 CURRNT  RMB     2       POINTS TO CURR LINE
-TXTUNF  RMB     2       -> TO LAST OF PGM
+TXTUNF  RMB     2       POINTS TO LAST OF PGM
 STKGOS  RMB     0       SAVE OF S IN GOSUB
 VARNXT  EQU     *
 STKINP  RMB     2       SAVE S DURING INPUT
@@ -103,7 +105,8 @@ TN1     JSR     <IGNBLK
         STD     0,S     STORE ACCUM BACK
         BPL     TN1     NO ERR? THEN GET NEXT DIGIT
 QHOW    LBSR    ERROR
-        FCC     "HOW?",13
+        FCC     "HOW?"
+		FCC		13
 
 NUMOUT  TST     3,S     SET FLAGS ON # DIGITS
         PULS    D,X,PC  AND GO AWAY
@@ -117,7 +120,7 @@ TVHOW   BVS     QHOW    DIRECT OVERFLOW TEST FOR ERROR
 *     HOWEVER, IF CURRENT STMT
 *     HAS MORE TO PROCESS CONTROL
 *     GOES BACK TO CALLER
-FIN     TSTC    "';",FI1
+FIN     TSTC    $3B,FI1
         LEAS    2,S     VOID RETURN
         LBRA    RUNSML
 FI1     CMPA    #$D
@@ -140,10 +143,12 @@ ENDCHK  TSTC    $D,QWHAT
 FINE    BSR     FIN     IF ERROR THEN FALL THROUGH
 ******************************
 QWHAT   LBSR    ERROR
-        FCC     'WHAT?',13
+        FCC     'WHAT?'
+        FCC     13
 
 QSORRY  LBSR    ERROR
-        FCC     'SORRY',13
+        FCC     'SORRY'
+        FCC     13
 
 ******************************
 *   IGNBLK      SCANS PART ANY
@@ -350,7 +355,7 @@ EXPR4   DISPAT  ON      FUNCTINONS
         PSHS    D
         CLRA
         CLRB
-        SUBD    S++
+        SUBD    0,S++
         JMP     TVHOW   IMPLIED RETURN IF NO OVERFLOW
 *****************************
 *  SIZE  HOW MUCH STORAGE LEFT
@@ -377,10 +382,10 @@ SIZE    TFR     S,D
         BCC     RETURN
         JSR     <TSTNUM NOT VAR TRY NUM
         BNE     RETURN  DIGIT CNT<>0 MEANS NUMBER
-PARM    TSTC    "'(",XP43
+PARM    TSTC    $28,XP43  
         JSR     <EXPR
         PSHS    CC,D    SAVE CONDITIONS OF EXPRESSION
-        TSTC    "')",XP43
+        TSTC    $29,XP43
         PULS    CC,D,PC FETCH CONDITIONS AND RETURN
 XP43    JMP     QWHAT
 
@@ -507,7 +512,7 @@ PR6     JSR     <CRLF   END OF STATEMENT WITH
         JSR     <EXPR
         PSHS    Y       SAVE TXT POINTER FOR ERROR SUB
         LBSR    FNDLN
-        BNE     GOERR   COULDN'T FIND DESTINATION
+        LBNE     GOERR   COULDN'T FIND DESTINATION
         LEAS    2,S     DISCARD OLD LINE NUM
         BRA     RUNTSL
 *
@@ -567,7 +572,8 @@ IP3     TFR     X,D     REGAIN ADDRESS OF VAR
         STX     CURRNT,U
         PULS    Y
 IP4     PULS    D       PURGE JUNK
-        TSTC    "',",IP5        IS NEXT A COMMA
+        TSTC    $2C,IP5 
+        * IS NEXT A COMMA
         BRA     IP1     YES, DO ANOTHER VARIABLE
 IP5     JMP     <FINE   FINISH
 *****************************
@@ -575,7 +581,8 @@ IP5     JMP     <FINE   FINISH
 *
         HERE    'LET'
 LET     LBSR    SETVAL  DO THE ASSIGNMENT
-        TSTC    "',",IP5        CHECK END LINE
+        TSTC    $2C,IP5        
+* CHECK END LINE
         BRA     LET
 *****************************
 * GOSUB
@@ -695,7 +702,7 @@ FOR8    LDY     LOPPT,U GET PROG POINTER
 SETVAL  LBSR    TSTVE   MUST BE VARIABLE
         BCS     QW1     NO VARIABLE
         PSHS    X
-        TSTC    "'=",QW1
+        TSTC    $3D,QW1
         JSR     <EXPR   EVALUATE THE EXPRESSION
         PULS    X
         STD     0,X     LEAVE ADDRESS IN X (FOR USES IT)
@@ -743,7 +750,7 @@ GL1     JSR     <CHKIO
         STA     ,Y+
         CMPA    #$D
         BEQ     GL0     RETURN
-        CMPY    S       WITH BUFFER END
+        CMPY    0,S	WITH BUFFER END
         BNE     GL1
 GL3     CMPY    2,S     ANYTHING IN BUFFER?
         BEQ     GL4
@@ -821,15 +828,17 @@ PRTSTG  CMPB    ,Y+     PRINT STRING AT Y
 *
 * PRINT QUOTED STRING
 *  RETURN WITH NOT ZERO IF DIDNT RECOGNIZE AS OUR STUFF
-QTSTG   TSTC    $22,QT3  DOUBLE QUOTE
+QTSTG   TSTC    $22,QT3
+* DOUBLE QUOTE
         LDB     #'"
 QT1     BSR     PRTSTG
         LBNE    RUNNXL  RUN NEXT LINE IF HIT RETURN
         RATS    RETURN  W ZERO SET
-QT3     TSTC    $27,QT4 SINGLE QUOTE
+QT3     TSTC    $27,QT4
+* SINGLE QUOTE
         LDB     #$27    PRINT TILL MATCH
         BRA     QT1
-QT4     TSTC    "'!",RETURN
+QT4     TSTC    $21,RETURN
         LDA     #$8D    FUNNY RETURN
         JSR     <OUTC   APPLE DOES NOT SUPPORT THIS
         CLRA            ZET ZERO STATUS
@@ -899,7 +908,8 @@ PU1     PSHS    X
 *    INITIALIZE AND ENTER COMMAND
 *    MODE
 *
-OK      FCC     'OK',13
+OK      FCC     'OK'
+        FCC     13
 ST1     LEAX    TSTNUM,PCR
         TFR     X,D
         TFR     A,DP
